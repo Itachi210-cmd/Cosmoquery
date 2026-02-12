@@ -4,7 +4,6 @@
 
 Built with **Flask** and **Vanilla JavaScript**, it processes large astronomical datasets (NASA Exoplanet Archive) to provide real-time filtering, interactive visualizations, and a "Deep Space" immersive experience.
 
-![Dashboard Preview](https://via.placeholder.com/1200x600/020408/38bdf8?text=CosmoQuery+Dashboard+Preview)
 
 ## ✨ Key Features
 
