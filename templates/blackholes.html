@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Unified Black Holes Research Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#c084fc", // Purple for Black Holes
+                        "secondary": "#38bdf8", // Blue secondary
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#020408",
+                        "panel-dark": "rgba(8, 10, 16, 0.8)",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: "Space Grotesk", sans-serif;
+            background: linear-gradient(to bottom, #050508 0%, #000000 100%);
+            background-attachment: fixed;
+        }
+
+        .glass-panel {
+            background: rgba(10, 12, 18, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .nebula-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 70% 30%, rgba(192, 132, 252, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 20% 80%, rgba(56, 189, 248, 0.08) 0%, transparent 40%);
+            filter: blur(60px);
+            opacity: 1;
+        }
+
+        /* Keep specific black hole styles if needed, or rely on global styles */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #315a68;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-white min-h-screen">
+    <div class="nebula-bg" data-alt="Deep space nebula with stars and galaxies"></div>
+    <canvas id="starfield" class="fixed inset-0 z-0 pointer-events-none opacity-80"></canvas>
+    <div class="flex h-full grow flex-col">
+        <!-- Header -->
+        <header
+            class="sticky top-0 z-50 glass-panel border-b border-white/10 px-8 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="bg-primary/20 p-2 rounded-lg">
+                    <span class="material-symbols-outlined text-primary text-3xl">rocket_launch</span>
+                </div>
+                <div>
+                    <h1 class="text-white text-xl font-bold tracking-tight">CosmoQuery</h1>
+                    <p class="text-xs text-primary font-medium tracking-widest uppercase">Unified Science Research
+                    </p>
+                </div>
+            </div>
+            <nav class="flex items-center gap-1">
+                <a id="nav-exoplanets"
+                    class="px-6 py-2 rounded-lg text-slate-400 hover:text-white transition-colors flex items-center gap-2 cursor-pointer transition-all"
+                    href="/dashboard">
+                    <span class="material-symbols-outlined text-sm">public</span>
+                    Exoplanets
+                </a>
+                <a id="nav-blackholes"
+                    class="px-6 py-2 rounded-lg bg-primary/20 text-primary border border-primary/30 font-bold flex items-center gap-2 cursor-pointer transition-all"
+                    href="/blackholes">
+                    <span class="material-symbols-outlined text-sm">brightness_low</span>
+                    Black Holes
+                </a>
+            </nav>
+            <div class="flex items-center gap-4">
+                <div class="size-10 rounded-full border-2 border-primary/50 overflow-hidden">
+                    <img alt="Profile"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrPVUte4-NZo7Vz1TI-xWaeNOMOc5H1zS1VJwUIAH89J0tr4Ado2A3DCTmFvbVQntpCYw0U6Zu0ulrzf2Mr4B2L2qTd72JVdREOe902QJxSDwWZV3MX4dGhplYnRqKD9uAoN2HmY2MPnhnjsXX0PAmlCvYtHgfk9ovFjahbBR3MQRKhR6r2YVPIr7s58XNJLRcHOSAO9WGGTfSRWSAwTN7estwNJnf_kADoDj6cO388YBFelQ4eqxn53IJXG9TSHiX6sX-IeamIIg" />
+                </div>
+            </div>
+        </header>
+        <main id="main-content" class="max-w-[1400px] mx-auto p-8 space-y-8">
+            <!-- Tab Section & Title -->
+            <div class="flex flex-col gap-2">
+                <div class="flex items-center gap-2 text-primary/80 mb-2">
+                    <span class="material-symbols-outlined text-sm">orbit</span>
+                    <span class="text-xs uppercase tracking-widest font-semibold">Research Portal</span>
+                </div>
+                <h2 class="text-white text-4xl font-bold tracking-tight">Black Hole Observation Query</h2>
+            </div>
+            <!-- Query Panel -->
+            <section class="glass-panel p-6 rounded-xl grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
+                <div class="flex flex-col gap-2">
+                    <label class="text-white text-sm font-medium flex items-center gap-2">
+                        <span class="material-symbols-outlined text-xs">category</span> Black Hole Type
+                    </label>
+                    <select
+                        class="form-input w-full rounded-lg text-white border-[#315a68] bg-[#182d34]/50 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-sm">
+                        <option>Supermassive</option>
+                        <option>Stellar-mass</option>
+                        <option>Intermediate-mass</option>
+                    </select>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <label class="text-white text-sm font-medium flex items-center gap-2">
+                        <span class="material-symbols-outlined text-xs">auto_awesome_motion</span> Host Galaxy
+                    </label>
+                    <select
+                        class="form-input w-full rounded-lg text-white border-[#315a68] bg-[#182d34]/50 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-sm">
+                        <option>Milky Way</option>
+                        <option>Andromeda (M31)</option>
+                        <option>Messier 87</option>
+                        <option>Centaurus A</option>
+                    </select>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <label class="text-white text-sm font-medium flex items-center gap-2">
+                        <span class="material-symbols-outlined text-xs">biotech</span> Discovery Method
+                    </label>
+                    <select
+                        class="form-input w-full rounded-lg text-white border-[#315a68] bg-[#182d34]/50 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-sm">
+                        <option>Gravitational Waves</option>
+                        <option>X-ray Emission</option>
+                        <option>Stellar Dynamics</option>
+                    </select>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <label class="text-white text-sm font-medium flex items-center gap-2">
+                        <span class="material-symbols-outlined text-xs">satellite</span> Observatory
+                    </label>
+                    <select
+                        class="form-input w-full rounded-lg text-white border-[#315a68] bg-[#182d34]/50 focus:border-primary focus:ring-1 focus:ring-primary h-12 px-4 text-sm">
+                        <option>Chandra X-ray</option>
+                        <option>Hubble</option>
+                        <option>Event Horizon Telescope</option>
+                    </select>
+                </div>
+                <button
+                    class="bg-primary text-background-dark h-12 rounded-lg font-bold flex items-center justify-center gap-2 neon-shadow transition-all">
+                    <span class="material-symbols-outlined">search</span> Search Database
+                </button>
+            </section>
+            <!-- Analytics Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Mass Distribution Bar Chart Simulation -->
+                <div class="glass-panel p-6 rounded-xl flex flex-col gap-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-white font-bold text-lg">Mass Distribution (Solar Masses)</h3>
+                        <span class="material-symbols-outlined text-slate-400">more_horiz</span>
+                    </div>
+                    <div class="flex items-end justify-between h-48 pt-4 gap-2">
+                        <div class="w-full bg-indigo-500/20 rounded-t-lg relative group h-[20%]">
+                            <div
+                                class="absolute inset-0 bg-indigo-400 rounded-t-lg transition-all group-hover:brightness-125">
+                            </div>
+                        </div>
+                        <div class="w-full bg-indigo-500/20 rounded-t-lg relative group h-[45%]">
+                            <div
+                                class="absolute inset-0 bg-indigo-400 rounded-t-lg transition-all group-hover:brightness-125">
+                            </div>
+                        </div>
+                        <div class="w-full bg-indigo-500/20 rounded-t-lg relative group h-[90%]">
+                            <div
+                                class="absolute inset-0 bg-indigo-500 rounded-t-lg transition-all group-hover:brightness-125">
+                            </div>
+                        </div>
+                        <div class="w-full bg-indigo-500/20 rounded-t-lg relative group h-[60%]">
+                            <div
+                                class="absolute inset-0 bg-indigo-500 rounded-t-lg transition-all group-hover:brightness-125">
+                            </div>
+                        </div>
+                        <div class="w-full bg-indigo-500/20 rounded-t-lg relative group h-[30%]">
+                            <div
+                                class="absolute inset-0 bg-indigo-600 rounded-t-lg transition-all group-hover:brightness-125">
+                            </div>
+                        </div>
+                        <div class="w-full bg-indigo-500/20 rounded-t-lg relative group h-[75%]">
+                            <div
+                                class="absolute inset-0 bg-indigo-600 rounded-t-lg transition-all group-hover:brightness-125">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                        <span>10M - 100M</span>
+                        <span>100M - 500M</span>
+                        <span>500M - 1B</span>
+                        <span>1B - 5B</span>
+                        <span>5B - 10B</span>
+                        <span>10B+</span>
+                    </div>
+                </div>
+                <!-- Observatory Contributions Donut Chart Simulation -->
+                <div class="glass-panel p-6 rounded-xl flex flex-col gap-4">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-white font-bold text-lg">Observatory Contributions</h3>
+                        <span class="material-symbols-outlined text-slate-400">analytics</span>
+                    </div>
+                    <div class="flex items-center justify-center h-48 relative">
+                        <!-- SVG Donut -->
+                        <svg class="size-40 transform -rotate-90">
+                            <circle class="text-slate-800" cx="80" cy="80" fill="transparent" r="60"
+                                stroke="currentColor" stroke-width="20"></circle>
+                            <circle class="text-primary" cx="80" cy="80" fill="transparent" r="60" stroke="currentColor"
+                                stroke-dasharray="376" stroke-dashoffset="100" stroke-width="20"></circle>
+                            <circle class="text-cyan-700" cx="80" cy="80" fill="transparent" r="60"
+                                stroke="currentColor" stroke-dasharray="376" stroke-dashoffset="280" stroke-width="20">
+                            </circle>
+                        </svg>
+                        <div class="absolute flex flex-col items-center">
+                            <span class="text-2xl font-bold text-white">432</span>
+                            <span class="text-[10px] text-slate-400 uppercase tracking-widest">Total Logs</span>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div class="flex items-center gap-2 text-xs">
+                            <div class="size-2 rounded-full bg-primary"></div>
+                            <span class="text-slate-300">Chandra (45%)</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs">
+                            <div class="size-2 rounded-full bg-cyan-700"></div>
+                            <span class="text-slate-300">Hubble (30%)</span>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs">
+                            <div class="size-2 rounded-full bg-slate-800"></div>
+                            <span class="text-slate-300">Others (25%)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Data Table Section -->
+            <section class="glass-panel rounded-xl overflow-hidden">
+                <div class="p-6 border-b border-[#315a68]/30 flex justify-between items-center bg-[#182d34]/30">
+                    <h3 class="text-white font-bold text-lg">Recent Discoveries &amp; Observations</h3>
+                    <div class="flex gap-2">
+                        <button class="p-2 rounded hover:bg-white/5 transition-colors text-slate-400">
+                            <span class="material-symbols-outlined">filter_list</span>
+                        </button>
+                        <button class="p-2 rounded hover:bg-white/5 transition-colors text-slate-400">
+                            <span class="material-symbols-outlined">download</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-slate-400 text-xs font-bold uppercase tracking-wider bg-[#182d34]/20">
+                                <th class="px-6 py-4 border-b border-[#315a68]/20">Object Name <span
+                                        class="material-symbols-outlined text-[10px] align-middle">expand_more</span>
+                                </th>
+                                <th class="px-6 py-4 border-b border-[#315a68]/20">Type</th>
+                                <th class="px-6 py-4 border-b border-[#315a68]/20">Mass (M☉)</th>
+                                <th class="px-6 py-4 border-b border-[#315a68]/20">Distance (ly)</th>
+                                <th class="px-6 py-4 border-b border-[#315a68]/20">Host Galaxy</th>
+                                <th class="px-6 py-4 border-b border-[#315a68]/20">Observation Date</th>
+                                <th class="px-6 py-4 border-b border-[#315a68]/20 text-right">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="blackhole-table-body" class="text-sm">
+                            <!-- Dynamically populated rows -->
+                        </tbody>
+                    </table>
+                </div>
+                <div
+                    class="p-4 border-t border-[#315a68]/30 flex justify-between items-center text-xs text-slate-500 font-medium">
+                    <span id="results-count">Showing 0 results</span>
+                    <div class="flex gap-1">
+                        <button class="px-3 py-1 rounded border border-[#315a68]/30 hover:bg-white/5">Previous</button>
+                        <button class="px-3 py-1 rounded bg-primary text-background-dark font-bold">1</button>
+                        <button class="px-3 py-1 rounded border border-[#315a68]/30 hover:bg-white/5">Next</button>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+    </div>
+
+    <script src="{{ url_for('static', filename='blackholes.js') }}"></script>
+    <script src="{{ url_for('static', filename='particles.js') }}"></script>
+</body>
+
+</html>

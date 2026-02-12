@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Unified Space Science Research Dashboard</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#38bdf8", // Sky 400
+                        "secondary": "#818cf8", // Indigo 400
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#020408", // Almost black
+                        "panel-dark": "rgba(8, 15, 30, 0.7)", // Deep blue glass
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk"]
+                    },
+                    borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px" },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: "Space Grotesk", sans-serif;
+            background: linear-gradient(to bottom, #050a14 0%, #000000 100%);
+            /* Simpler, darker gradient */
+            background-attachment: fixed;
+        }
+
+        .glass-panel {
+            background: rgba(10, 15, 25, 0.75) !important;
+            /* Overwrite CSS if needed */
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            /* More subtle border */
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .nebula-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 30% 20%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 80% 60%, rgba(129, 140, 248, 0.08) 0%, transparent 40%);
+            filter: blur(60px);
+            opacity: 1;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #315a68;
+            border-radius: 10px;
+        }
+
+        /* Utility for Loading State */
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-top-color: #0db9f2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark text-white min-h-screen">
+    <div class="nebula-bg" data-alt="Deep space nebula with stars and galaxies"></div>
+    <canvas id="starfield" class="fixed inset-0 z-0 pointer-events-none opacity-80"></canvas>
+    <div class="flex h-full grow flex-col">
+
+        <!-- TopNavBar -->
+        <header
+            class="sticky top-0 z-50 glass-panel border-b border-white/10 px-8 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <div class="bg-primary/20 p-2 rounded-lg">
+                    <span class="material-symbols-outlined text-primary text-3xl">rocket_launch</span>
+                </div>
+                <div>
+                    <h1 class="text-white text-xl font-bold tracking-tight">CosmoQuery</h1>
+                    <p class="text-xs text-primary font-medium tracking-widest uppercase">Unified Science Research</p>
+                </div>
+            </div>
+            <nav class="flex items-center gap-1">
+                <a id="nav-exoplanets"
+                    class="px-6 py-2 rounded-lg bg-primary/20 text-primary border border-primary/30 font-bold flex items-center gap-2 cursor-pointer transition-all"
+                    href="/dashboard">
+                    <span class="material-symbols-outlined text-sm">public</span>
+                    Exoplanets
+                </a>
+                <a id="nav-blackholes"
+                    class="px-6 py-2 rounded-lg text-slate-400 hover:text-white transition-colors flex items-center gap-2 cursor-pointer transition-all"
+                    href="/blackholes">
+                    <span class="material-symbols-outlined text-sm">brightness_low</span>
+                    Black Holes
+                </a>
+            </nav>
+            <div class="flex items-center gap-4">
+                <button onclick="toggleTypeGuide()"
+                    class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all text-xs font-bold text-slate-300 hover:text-white uppercase tracking-wider">
+                    <span class="material-symbols-outlined text-sm">school</span>
+                    Guide
+                </button>
+                <div class="size-10 rounded-full border-2 border-primary/50 overflow-hidden">
+                    <img alt="Profile"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBrPVUte4-NZo7Vz1TI-xWaeNOMOc5H1zS1VJwUIAH89J0tr4Ado2A3DCTmFvbVQntpCYw0U6Zu0ulrzf2Mr4B2L2qTd72JVdREOe902QJxSDwWZV3MX4dGhplYnRqKD9uAoN2HmY2MPnhnjsXX0PAmlCvYtHgfk9ovFjahbBR3MQRKhR6r2YVPIr7s58XNJLRcHOSAO9WGGTfSRWSAwTN7estwNJnf_kADoDj6cO388YBFelQ4eqxn53IJXG9TSHiX6sX-IeamIIg" />
+                </div>
+            </div>
+        </header>
+
+        <main id="main-content" class="max-w-[1400px] mx-auto w-full px-8 py-6 space-y-6">
+
+            <!-- Black Hole Section (Hidden by Default) -->
+            <section id="blackhole-section"
+                class="hidden glass-panel rounded-xl overflow-hidden flex flex-col p-6 min-h-[500px]">
+                <div
+                    class="px-6 py-4 border-b border-white/10 flex items-center justify-between bg-white/5 mb-6 rounded-lg">
+                    <h3 class="font-bold flex items-center gap-2">
+                        <span class="material-symbols-outlined text-secondary">brightness_low</span>
+                        Black Hole Catalog
+                    </h3>
+                    <div class="flex items-center gap-4">
+                        <div class="flex bg-black/40 rounded-lg p-1">
+                            <button class="px-3 py-1 bg-white/10 rounded-md text-xs font-bold">Top 10</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left text-sm border-collapse">
+                        <thead>
+                            <tr
+                                class="text-xs uppercase tracking-widest text-secondary border-b border-white/5 font-bold">
+                                <th class="px-6 py-4 font-bold">Name</th>
+                                <th class="px-6 py-4 font-bold">Mass</th>
+                                <th class="px-6 py-4 font-bold">Distance</th>
+                                <th class="px-6 py-4 font-bold">Type</th>
+                                <th class="px-6 py-4 font-bold text-right">Constellation</th>
+                            </tr>
+                        </thead>
+                        <tbody id="blackhole-table-body" class="divide-y divide-white/5">
+                            <!-- Rows injected by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Exoplanet Container -->
+            <div id="exoplanet-container" class="space-y-6">
+                <!-- Top Query Bar -->
+
+                <!-- Filters (Responsive) -->
+                <div class="glass-panel p-4 mb-6 rounded-xl border border-white/5">
+                    <div class="flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center">
+                        <!-- Selects -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 w-full lg:w-auto">
+                            <select id="discovery-year"
+                                class="bg-white/5 border border-white/10 text-white text-sm rounded-lg block w-full p-2.5 focus:ring-primary focus:border-primary">
+                                <option value="">All Years</option>
+                                <!-- Populated by JS -->
+                            </select>
+                            <select id="discovery-method"
+                                class="bg-white/5 border border-white/10 text-white text-sm rounded-lg block w-full p-2.5 focus:ring-primary focus:border-primary">
+                                <option value="">All Methods</option>
+                                <!-- Populated by JS -->
+                            </select>
+                            <!-- Input -->
+                            <input type="text" id="host-star" placeholder="Host Star..."
+                                class="bg-white/5 border border-white/10 text-white text-sm rounded-lg block w-full p-2.5 focus:ring-primary focus:border-primary">
+                            <select id="discovery-facility"
+                                class="bg-white/5 border border-white/10 text-white text-sm rounded-lg block w-full p-2.5 focus:ring-primary focus:border-primary">
+                                <option value="">All Facilities</option>
+                                <!-- Populated by JS -->
+                            </select>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="flex gap-2 w-full lg:w-auto">
+                            <button id="search-btn"
+                                class="flex-1 lg:flex-none w-full lg:w-32 justify-center text-background-dark bg-primary hover:bg-primary/90 focus:ring-4 focus:ring-primary/50 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none flex items-center gap-2 transition-all">
+                                <span class="material-symbols-outlined text-lg">search</span>
+                                Search
+                            </button>
+                            <button id="clear-btn"
+                                class="p-2.5 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg transition-all"
+                                title="Reset Filters">
+                                <span class="material-symbols-outlined">refresh</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                    <!-- Row 1: Table & Detection Methods -->
+
+                    <!-- Table (Span 2) -->
+                    <div
+                        class="lg:col-span-2 glass-panel rounded-xl border border-white/5 overflow-hidden flex flex-col h-[500px]">
+                        <div
+                            class="p-4 border-b border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white/5">
+                            <div class="flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary">table_view</span>
+                                <h2 class="text-lg font-bold text-white">Exoplanet Research Catalog</h2>
+                            </div>
+                            <div class="flex gap-2">
+                                <button
+                                    class="px-3 py-1 rounded bg-black/20 text-xs font-bold text-slate-400 border border-white/5">Main</button>
+                                <button
+                                    class="p-1 px-2 rounded hover:bg-white/5 text-slate-400 hover:text-white transition-colors">
+                                    <span class="material-symbols-outlined text-sm">download</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Desktop Table View -->
+                        <div class="flex-1 overflow-auto custom-scrollbar hidden md:block">
+                            <table class="w-full text-sm text-left text-slate-400">
+                                <thead
+                                    class="text-xs text-slate-500 uppercase bg-black/20 sticky top-0 backdrop-blur-sm z-10">
+                                    <tr>
+                                        <th scope="col"
+                                            class="px-6 py-3 cursor-pointer hover:text-primary transition-colors"
+                                            data-sort="pl_name">Object Name</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 cursor-pointer hover:text-primary transition-colors"
+                                            data-sort="hostname">Host Star</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-center cursor-pointer hover:text-primary transition-colors"
+                                            data-sort="pl_bmassj">Mass (M<sub>J</sub>)</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-center cursor-pointer hover:text-primary transition-colors"
+                                            data-sort="pl_radj">Radius (R<sub>J</sub>)</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-center cursor-pointer hover:text-primary transition-colors"
+                                            data-sort="pl_orbper">Period (Days)</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 cursor-pointer hover:text-primary transition-colors"
+                                            data-sort="discoverymethod">Disc. Method</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 cursor-pointer hover:text-primary transition-colors"
+                                            data-sort="disc_facility">Facility</th>
+                                        <th scope="col"
+                                            class="px-6 py-3 text-right cursor-pointer hover:text-primary transition-colors"
+                                            data-sort="disc_year">Year</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="exoplanet-table-body" class="divide-y divide-white/5">
+                                    <!-- Populated by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Mobile Card View -->
+                        <div id="mobile-cards" class="flex-1 overflow-auto custom-scrollbar md:hidden p-4 space-y-4">
+                            <!-- Populated by JS -->
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="p-4 border-t border-white/5 bg-black/20 text-xs flex justify-between items-center">
+                            <span id="results-info" class="text-slate-500 uppercase tracking-wider font-bold">SHOWING 0
+                                ITEMS</span>
+                            <div class="flex gap-2 items-center">
+                                <button id="prev-btn"
+                                    class="text-slate-400 hover:text-white disabled:opacity-30 transition-colors bg-white/5 px-2 py-1 rounded hover:bg-white/10"
+                                    disabled>
+                                    <span class="material-symbols-outlined text-sm">chevron_left</span>
+                                </button>
+                                <span id="page-display" class="font-mono text-primary">Page 1</span>
+                                <button id="next-btn"
+                                    class="text-slate-400 hover:text-white disabled:opacity-30 transition-colors bg-white/5 px-2 py-1 rounded hover:bg-white/10">
+                                    <span class="material-symbols-outlined text-sm">chevron_right</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detection Methods (Span 1) - Matched Height -->
+                    <div class="glass-panel p-6 rounded-xl flex flex-col h-[500px]">
+                        <div class="flex justify-between items-start mb-6">
+                            <div>
+                                <h3 class="text-lg font-bold flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-secondary">analytics</span>
+                                    Detection Methods
+                                </h3>
+                                <p class="text-xs text-slate-400">Distribution of confirmation techniques</p>
+                            </div>
+                        </div>
+                        <div class="flex-1 flex flex-col gap-6 items-center justify-center">
+                            <div class="relative flex items-center justify-center">
+                                <svg class="size-56 transform -rotate-90" viewBox="0 0 100 100">
+                                    <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.05)"
+                                        stroke-width="8"></circle>
+                                    <circle cx="50" cy="50" r="40" fill="none" stroke="#a855f7" stroke-width="8"
+                                        stroke-dasharray="251.2" stroke-dashoffset="60">
+                                    </circle>
+                                    <circle cx="50" cy="50" r="30" fill="none" stroke="#0db9f2" stroke-width="8"
+                                        stroke-dasharray="188.4" stroke-dashoffset="120">
+                                    </circle>
+                                </svg>
+                                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                    <span class="text-3xl font-bold text-white">78%</span>
+                                    <span
+                                        class="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Transit</span>
+                                </div>
+                            </div>
+                            <div class="w-full grid grid-cols-2 gap-3">
+                                <div
+                                    class="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5">
+                                    <div class="flex items-center gap-2">
+                                        <div class="size-2 rounded-full bg-secondary"></div>
+                                        <span class="text-xs font-bold text-slate-300">Transit</span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-500">High Vol</span>
+                                </div>
+                                <div
+                                    class="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5">
+                                    <div class="flex items-center gap-2">
+                                        <div class="size-2 rounded-full bg-primary"></div>
+                                        <span class="text-xs font-bold text-slate-300">Radial Vel.</span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-500">Precision</span>
+                                </div>
+                                <div
+                                    class="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5">
+                                    <div class="flex items-center gap-2">
+                                        <div class="size-2 rounded-full bg-green-500"></div>
+                                        <span class="text-xs font-bold text-slate-300">Imaging</span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-500">Visual</span>
+                                </div>
+                                <div
+                                    class="flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5">
+                                    <div class="flex items-center gap-2">
+                                        <div class="size-2 rounded-full bg-yellow-500"></div>
+                                        <span class="text-xs font-bold text-slate-300">Microlens</span>
+                                    </div>
+                                    <span class="text-[10px] text-slate-500">Gravity</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row 2: Discovery Trends (Full Width) -->
+                    <div class="lg:col-span-3 glass-panel p-6 rounded-xl flex flex-col">
+                        <div class="flex justify-between items-start mb-6">
+                            <div>
+                                <h3 class="text-lg font-bold flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary">show_chart</span>
+                                    Discovery Trends
+                                </h3>
+                                <p class="text-xs text-slate-400">Total verified exoplanets discovered per
+                                    decade
+                                </p>
+                            </div>
+                            <div class="text-right">
+                                <p id="total-count-display" class="text-3xl font-bold text-primary tracking-tighter">
+                                    Loading...</p>
+                                <p class="text-[10px] text-green-400 flex items-center justify-end">
+                                    <span class="material-symbols-outlined text-xs">trending_up</span>
+                                    Active
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex-1 min-h-[220px]">
+                            <svg id="trends-chart-svg" class="w-full h-full drop-shadow-[0_0_10px_rgba(13,185,242,0.3)]"
+                                viewBox="0 0 500 200">
+                                <defs>
+                                    <linearGradient id="grad1" x1="0%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" style="stop-color:rgba(13,185,242,0.4);stop-opacity:1">
+                                        </stop>
+                                        <stop offset="100%" style="stop-color:rgba(13,185,242,0);stop-opacity:0">
+                                        </stop>
+                                    </linearGradient>
+                                </defs>
+                                <path d="M0,180 Q50,170 100,150 T200,100 T300,80 T400,30 T500,10 V200 H0 Z"
+                                    fill="url(#grad1)"></path>
+                                <path d="M0,180 Q50,170 100,150 T200,100 T300,80 T400,30 T500,10" fill="none"
+                                    stroke="#0db9f2" stroke-width="4" stroke-linecap="round"></path>
+                                <circle cx="100" cy="150" r="4" fill="#0db9f2"></circle>
+                                <circle cx="200" cy="100" r="4" fill="#0db9f2"></circle>
+                                <circle cx="300" cy="80" r="4" fill="#0db9f2"></circle>
+                                <circle cx="400" cy="30" r="4" fill="#0db9f2"></circle>
+                                <circle cx="500" cy="10" r="4" fill="#0db9f2"></circle>
+                            </svg>
+                        </div>
+                        <div
+                            class="flex justify-between mt-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                            <span>1990s</span>
+                            <span>2000s</span>
+                            <span>2010s</span>
+                            <span>2020s</span>
+                            <span>Current</span>
+                        </div>
+                    </div>
+
+                </div> <!-- End Exoplanet Container -->
+        </main>
+
+        <footer class="mt-auto py-6 px-8 text-center text-slate-500 text-[10px] uppercase tracking-[0.2em]">
+            © 2024 Unified Space Research Archive • Data Source: NASA Exoplanet Archive
+        </footer>
+    </div>
+
+    <!-- Comparison Modal -->
+    <div id="comparison-modal"
+        class="fixed inset-0 z-50 hidden items-center justify-center bg-black/90 backdrop-blur-sm p-4">
+        <div
+            class="glass-panel w-full max-w-6xl p-8 relative rounded-2xl border border-white/10 shadow-2xl transform transition-all scale-100 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <button onclick="closeComparisonModal()"
+                class="absolute top-4 right-4 text-slate-400 hover:text-white material-symbols-outlined">close</button>
+
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-white mb-2">Planetary Comparison</h2>
+                <p class="text-slate-400">Side-by-side analysis of celestial bodies</p>
+            </div>
+
+            <div id="comparison-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Data populated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Action Bar for Comparison -->
+    <div id="comparison-bar"
+        class="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-40 bg-white/10 backdrop-blur-md border border-white/10 px-6 py-3 rounded-full flex items-center gap-4 shadow-2xl transition-all translate-y-24">
+        <span class="text-white font-bold text-sm"><span id="compare-count" class="text-primary">0</span>
+            Selected</span>
+        <button onclick="openComparisonModal()"
+            class="bg-primary text-background-dark px-4 py-1.5 rounded-full text-xs font-bold hover:brightness-110 transition-colors uppercase tracking-wider">
+            Compare Now
+        </button>
+        <button onclick="clearComparisonSelection()"
+            class="text-slate-400 hover:text-white material-symbols-outlined text-lg" title="Clear Selection">
+            close
+        </button>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Exoplanet Type Guide Modal -->
+    <div id="type-guide-modal"
+        class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div
+            class="glass-panel w-full max-w-4xl p-8 relative rounded-2xl border border-white/10 shadow-2xl transform transition-all scale-100 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <button onclick="toggleTypeGuide()"
+                class="absolute top-4 right-4 text-slate-400 hover:text-white material-symbols-outlined">close</button>
+
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-white mb-2">Exoplanet Classification Guide</h2>
+                <p class="text-slate-400">Understanding the diverse worlds beyond our solar system</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Gas Giant -->
+                <div
+                    class="bg-white/5 rounded-xl p-6 border border-white/5 hover:border-primary/50 transition-colors group">
+                    <div class="flex items-start gap-4">
+                        <div
+                            class="p-3 rounded-lg bg-orange-500/20 text-orange-400 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-3xl">circle</span>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white mb-1">Gas Giant</h3>
+                            <p class="text-xs text-orange-300 uppercase tracking-wider font-bold mb-2">Like Jupiter or
+                                Saturn</p>
+                            <p class="text-sm text-slate-300 leading-relaxed">Massive planets composed mostly of
+                                hydrogen and helium. These giants often orbit very close to their stars ("Hot Jupiters")
+                                but can be found far out as well.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Neptune-like -->
+                <div
+                    class="bg-white/5 rounded-xl p-6 border border-white/5 hover:border-primary/50 transition-colors group">
+                    <div class="flex items-start gap-4">
+                        <div
+                            class="p-3 rounded-lg bg-blue-500/20 text-blue-400 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-3xl">public</span>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white mb-1">Neptune-like</h3>
+                            <p class="text-xs text-blue-300 uppercase tracking-wider font-bold mb-2">Like Neptune or
+                                Uranus</p>
+                            <p class="text-sm text-slate-300 leading-relaxed">Gaseous worlds smaller than Jupiter but
+                                larger than Earth. They often have thick atmospheres of hydrogen, helium, and methane,
+                                giving them a blue hue.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Super-Earth -->
+                <div
+                    class="bg-white/5 rounded-xl p-6 border border-white/5 hover:border-primary/50 transition-colors group">
+                    <div class="flex items-start gap-4">
+                        <div
+                            class="p-3 rounded-lg bg-emerald-500/20 text-emerald-400 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-3xl">landscape</span>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white mb-1">Super-Earth</h3>
+                            <p class="text-xs text-emerald-300 uppercase tracking-wider font-bold mb-2">Rocky but
+                                Massive</p>
+                            <p class="text-sm text-slate-300 leading-relaxed">Planets more massive than Earth but
+                                lighter than Neptune. They might be rocky, ocean worlds, or have thin atmospheres. A
+                                common type not found in our solar system.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Terrestrial -->
+                <div
+                    class="bg-white/5 rounded-xl p-6 border border-white/5 hover:border-primary/50 transition-colors group">
+                    <div class="flex items-start gap-4">
+                        <div
+                            class="p-3 rounded-lg bg-red-500/20 text-red-400 group-hover:scale-110 transition-transform">
+                            <span class="material-symbols-outlined text-3xl">terrain</span>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold text-white mb-1">Terrestrial</h3>
+                            <p class="text-xs text-red-300 uppercase tracking-wider font-bold mb-2">Earth-sized & Rocky
+                            </p>
+                            <p class="text-sm text-slate-300 leading-relaxed">Small, rocky worlds with iron-rich cores.
+                                These are the prime targets in the search for life, especially if found in the habitable
+                                zone.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Habitability Modal (Existing) -->
+    <div id="habitability-modal"
+        class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div
+            class="glass-panel w-full max-w-lg p-8 relative rounded-2xl border border-white/10 shadow-2xl transform transition-all scale-100">
+            <button onclick="closeHabitabilityModal()"
+                class="absolute top-4 right-4 text-slate-400 hover:text-white material-symbols-outlined">close</button>
+            <div class="text-center">
+                <h3 class="text-slate-400 uppercase tracking-widest text-sm font-bold mb-2">Life Viability Report</h3>
+                <h2 id="modal-planet-name" class="text-3xl font-bold text-white mb-6">Planet Name</h2>
+
+                <div class="mb-8">
+                    <div id="modal-score" class="text-6xl font-bold mb-2 text-primary">0/100</div>
+                    <div id="modal-label" class="text-xl uppercase tracking-widest text-primary">Unknown</div>
+                </div>
+
+                <div class="bg-white/5 rounded-xl p-6 text-left">
+                    <h4 class="text-slate-400 text-xs uppercase font-bold mb-4 border-b border-white/10 pb-2">Analysis
+                        Factors</h4>
+                    <ul id="modal-reasons" class="space-y-2 text-sm">
+                        <!-- Reasons populated by JS -->
+                    </ul>
+                </div>
+
+                <div class="mt-6 text-xs text-slate-500 italic">
+                    *Estimation based on Earth Similarity Index (ESI) factors using Radius, Flux, and Temperature.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="{{ url_for('static', filename='particles.js') }}"></script>
+</body>
+
+</html>

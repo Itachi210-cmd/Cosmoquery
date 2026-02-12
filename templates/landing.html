@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>CosmoQuery - Interactive Celestial Explorer</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#0db9f2",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#05070a",
+                        "space-void": "#000000",
+                    },
+                    fontFamily: {
+                        "display": ["Space Grotesk", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @keyframes slow-rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .planet-rotate {
+            animation: slow-rotate 20s linear infinite;
+        }
+        .planet-container:hover .planet-label {
+            opacity: 1;
+            transform: translateY(-10px);
+        }
+        .star-field {
+            background-image: 
+                radial-gradient(1px 1px at 20px 30px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 40px 70px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(2px 2px at 50px 160px, #0db9f2, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 90px 40px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(1px 1px at 130px 80px, #ffffff, rgba(0,0,0,0)),
+                radial-gradient(1.5px 1.5px at 160px 120px, #ffffff, rgba(0,0,0,0));
+            background-repeat: repeat;
+            background-size: 200px 200px;
+        }
+        .glass-btn {
+            background: rgba(13, 185, 242, 0.05);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(13, 185, 242, 0.3);
+            box-shadow: 0 0 15px rgba(13, 185, 242, 0.1);
+            transition: all 0.3s ease;
+        }
+        .glass-btn:hover {
+            background: rgba(13, 185, 242, 0.15);
+            border-color: #0db9f2;
+            box-shadow: 0 0 25px rgba(13, 185, 242, 0.3);
+            transform: translateY(-2px);
+        }
+        /* Transition Effects */
+        .page-exit {
+            transition: transform 1s cubic-bezier(0.7, 0, 0.3, 1), opacity 1s cubic-bezier(0.7, 0, 0.3, 1);
+            transform-origin: center center;
+        }
+        .page-exit-active {
+            transform: scale(3);
+            opacity: 0;
+            filter: blur(10px);
+        }
+        .warp-overlay {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease-in;
+            background: #ffffff;
+            z-index: 100;
+        }
+        .warp-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-white selection:bg-primary/30">
+    <div class="relative min-h-screen flex flex-col overflow-x-hidden">
+        <div class="fixed inset-0 z-0 pointer-events-none">
+            <div class="absolute inset-0 bg-gradient-to-b from-background-dark via-[#0a151a] to-space-void"></div>
+            <div class="absolute inset-0 star-field opacity-40"></div>
+            <div
+                class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[120px]">
+            </div>
+        </div>
+        <header class="relative z-10 flex items-center justify-between px-8 py-6 max-w-7xl mx-auto w-full">
+            <div class="flex items-center gap-2 group cursor-pointer">
+                <span class="material-symbols-outlined text-primary text-3xl">flare</span>
+                <h1 class="text-xl font-bold tracking-tight">CosmoQuery</h1>
+            </div>
+
+        </header>
+        <main class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 py-12">
+            <div class="text-center mb-16 space-y-4 max-w-2xl">
+                <h2
+                    class="text-5xl md:text-7xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70">
+                    CosmoQuery
+                </h2>
+                <p class="text-lg md:text-xl text-slate-400 font-light">
+                    Explore the Solar System, Exoplanets, and Black Holes in high-performance detail.
+                </p>
+            </div>
+            <div class="w-full max-w-6xl px-4 mb-20">
+                <div class="flex flex-wrap lg:flex-nowrap justify-center items-end gap-4 lg:gap-8">
+                    <div class="planet-container relative group flex flex-col items-center cursor-pointer">
+                        <span
+                            class="planet-label absolute -top-12 opacity-0 transition-all duration-300 text-primary text-sm font-bold tracking-widest uppercase">Mercury</span>
+                        <div
+                            class="w-12 h-12 md:w-16 md:h-16 rounded-full planet-rotate overflow-hidden transition-transform duration-500 group-hover:scale-110 shadow-[0_10px_20px_-5px_rgba(0,0,0,0.5)]">
+                            <img class="w-full h-full object-cover"
+                                data-alt="Flat design Mercury planet icon with craters"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjZB84cEFi9msp03Vojn1NbSBCp3XYIQM8xpayyp2Uf_eeblHT1K4use92mdEzS6gOX9JAIS8vn_EW2INd0aMNMSRKL_x3PYGjkG1IQCV2fchh9j6UjH0xWaGf3aI9LvACSU3tgtn6QvMTFlwNuGDLhvC7lLSjGmftwCTh2vce6Fdufnv9ygZUxbS7Cwbk6C3lEbfFvBe7Zc7OqHdOb2YfIn-N3aKJdBUV-o3tKe60cd5tBNfI28Oc8ZRFTCbLK4-3ZUMxyfmr3OM" />
+                        </div>
+                        <div class="w-8 h-1 bg-black/40 blur-md mt-4 rounded-full"></div>
+                    </div>
+                    <div class="planet-container relative group flex flex-col items-center cursor-pointer">
+                        <span
+                            class="planet-label absolute -top-12 opacity-0 transition-all duration-300 text-primary text-sm font-bold tracking-widest uppercase">Venus</span>
+                        <div
+                            class="w-16 h-16 md:w-24 md:h-24 rounded-full planet-rotate overflow-hidden transition-transform duration-500 group-hover:scale-110 shadow-[0_12px_24px_-8px_rgba(255,165,0,0.2)]">
+                            <img class="w-full h-full object-cover"
+                                data-alt="Flat design Venus planet icon with thick clouds"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAIAa3V_zDQTPTG0I9MUI9XrH0OcCa6IQiNfhAgjlC8sDQhepXZZYpXBW7Rx1gxBS71acapj7KPhuuMulEFenKL7onoGFAm5YDljBYI9UcDTy5cGKanWEgxUbGVVfeEvy7yTM2faCmyPOBKtS1zl0lGvCDCW6BEUwwHcowLgmrAbjhM0L6n5YM-LpZE0xNAPdYYP64RqpXRA8aeBFYUvl29bY2OYcDZNW-jQlLkf60rJ_AvjDP20RFkjpY5dyn6_0PTXHFkFBzviMU" />
+                        </div>
+                        <div class="w-12 h-1.5 bg-black/40 blur-md mt-4 rounded-full"></div>
+                    </div>
+                    <div class="planet-container relative group flex flex-col items-center cursor-pointer">
+                        <span
+                            class="planet-label absolute -top-12 opacity-0 transition-all duration-300 text-primary text-sm font-bold tracking-widest uppercase">Earth</span>
+                        <div
+                            class="w-20 h-20 md:w-28 md:h-28 rounded-full planet-rotate overflow-hidden transition-transform duration-500 group-hover:scale-110 shadow-[0_15px_30px_-10px_rgba(13,185,242,0.3)]">
+                            <img class="w-full h-full object-cover"
+                                data-alt="Flat design Earth planet icon with continents"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCt_XFSnbqu4mDkOMgPgkRvHO4xqNZo2PqXXSz9n_PpBvBdMf5R6tYENQxfX8hBMRVAJHL_kXMr2K9thxaFx-diXrwDFA2Q0IIXb49IG2EFfA9nVubTN3Q0BoflqCaDCLJZd2DaVAgOZpRMsb24O4CrN_BdM0Wfd4mPZS7HKrzUrcI_r0gCAYYAiqEdWijzQb5vil4UzlD_Vo2EN69nQz1MgyPp5EsMCYRfIxgpGKdz9yUSJ4YdTocySCMYg97c_tun4FrqzOTMcoU" />
+                        </div>
+                        <div class="w-16 h-2 bg-black/40 blur-md mt-4 rounded-full"></div>
+                    </div>
+                    <div class="planet-container relative group flex flex-col items-center cursor-pointer">
+                        <span
+                            class="planet-label absolute -top-12 opacity-0 transition-all duration-300 text-primary text-sm font-bold tracking-widest uppercase">Mars</span>
+                        <div
+                            class="w-14 h-14 md:w-20 md:h-20 rounded-full planet-rotate overflow-hidden transition-transform duration-500 group-hover:scale-110 shadow-[0_12px_24px_-8px_rgba(255,69,0,0.2)]">
+                            <img class="w-full h-full object-cover" data-alt="Flat design Mars red planet icon"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPjtY42jU4Yu_BwofQWhAYXgeXTMItMiNv3YNh-ZXRnVUD1CZ4lZn1SEfD37tD7zFcjxUVML5ak1dyoLVAK6ebFIA3SfGhYPf1ADEE3LJWaK8dvDL7C4-hYxQlxT4d4D38g4dwKu-Jkv5Gf8WeuMwyXm-tjd32FneUEYZFzn-Snd1JoficHyA77guU5XBWXL9TRxZWYKi6UeaGZk4eqF_ipITOogheJ-SqrFvWGpXGcrS9ufPTz1pBkz460_70V64loQhZjZMXrHQ" />
+                        </div>
+                        <div class="w-10 h-1.5 bg-black/40 blur-md mt-4 rounded-full"></div>
+                    </div>
+                    <div class="planet-container relative group flex flex-col items-center cursor-pointer">
+                        <span
+                            class="planet-label absolute -top-12 opacity-0 transition-all duration-300 text-primary text-sm font-bold tracking-widest uppercase">Jupiter</span>
+                        <div
+                            class="w-24 h-24 md:w-36 md:h-36 rounded-full planet-rotate overflow-hidden transition-transform duration-500 group-hover:scale-110 shadow-[0_20px_40px_-15px_rgba(255,255,255,0.1)]">
+                            <img class="w-full h-full object-cover" data-alt="Flat design Jupiter gas giant icon"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCVeg6kgl8M32-Oh_2Gas7uoyruWY4KjLqytpxvU51E5agRwnP2WYfMBBZxA19aEsEGfxXKpaFYXX-666vOKOKa6pXDKczQHqsu_0SyDUSlmi3VBgWsqmKAR-xiyZL9-oz69rSDSdt1tPHzLRazbbs3nncC1WMOW82k8dANBaCGyWqbnHnu9V6CKzYhkLJzdn2ZYeKr3iqUQp-NkNV0tsYbuZg-zUN28Avae5EdMOOaMSQAXhCnTEb7UYzSST_S5YbvMv0btIZLvxQ" />
+                        </div>
+                        <div class="w-24 h-3 bg-black/40 blur-md mt-4 rounded-full"></div>
+                    </div>
+                    <div class="planet-container relative group flex flex-col items-center cursor-pointer">
+                        <span
+                            class="planet-label absolute -top-12 opacity-0 transition-all duration-300 text-primary text-sm font-bold tracking-widest uppercase">Saturn</span>
+                        <div
+                            class="w-24 h-24 md:w-36 md:h-36 rounded-full planet-rotate overflow-hidden flex items-center justify-center transition-transform duration-500 group-hover:scale-110 shadow-[0_20px_40px_-15px_rgba(255,255,255,0.1)] bg-transparent">
+                            <img class="w-[140%] max-w-none h-auto" data-alt="Flat design Saturn with rings"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMRHwTDhpNMCqdCVHbkuYhLJHqFsBz5cSD95b_RpZFFgTNSX83dBEss0g3PzcHq-KpyLRmPzDdjLbnEWAemgn2nvpjNEsW1pjR7HmqPf4Hmm_D3vYXEGxkgL47i1aIF6YA8ntVkpubSwpAFZJ9NR5sdEaCxs7ks-METkA7AaX5dYpZShMZr34-L-GDQysVviWOvFpzd4HoMMAogzY8zeAIlf06NYttW9g6WLtPc-mfBgECNDrxG_SvAceh0qWmn-Zt79j2jkm2HVc" />
+                        </div>
+                        <div class="w-24 h-3 bg-black/40 blur-md mt-4 rounded-full"></div>
+                    </div>
+                    <div class="planet-container relative group flex flex-col items-center cursor-pointer">
+                        <span
+                            class="planet-label absolute -top-12 opacity-0 transition-all duration-300 text-primary text-sm font-bold tracking-widest uppercase">Uranus</span>
+                        <div
+                            class="w-16 h-16 md:w-24 md:h-24 rounded-full planet-rotate overflow-hidden transition-transform duration-500 group-hover:scale-110 shadow-[0_12px_24px_-8px_rgba(13,185,242,0.1)]">
+                            <img class="w-full h-full object-cover" data-alt="Flat design Uranus ice giant icon"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqzWMnwRKOY3l_dtq1dB_nvmOo0rsR59dEipS0ngDdUZ650FS6EEnd5_7CYhhr-tOehYPJAj-tArA286dFeOcAWuCBcguMeDuDqi4wORS-0hWcSunpVem_aJ7gEKh6uUKl_J_zSh7VXF0Lf1Kjj-QAKFZKVq4fUfgIhp4hLcZi-lGgyJl_eERaAXmOJ0hJXpMcRnXb7_wPbSnFhvpGOOA3lyXHpluG_uIOl0jWdwGzWyprvqnE9kAijiriR7Y9FtJIzXAVZwfQnhg" />
+                        </div>
+                        <div class="w-12 h-1.5 bg-black/40 blur-md mt-4 rounded-full"></div>
+                    </div>
+                    <div class="planet-container relative group flex flex-col items-center cursor-pointer">
+                        <span
+                            class="planet-label absolute -top-12 opacity-0 transition-all duration-300 text-primary text-sm font-bold tracking-widest uppercase">Neptune</span>
+                        <div
+                            class="w-16 h-16 md:w-22 md:h-22 rounded-full planet-rotate overflow-hidden transition-transform duration-500 group-hover:scale-110 shadow-[0_12px_24px_-8px_rgba(0,0,255,0.2)]">
+                            <img class="w-full h-full object-cover" data-alt="Flat design Neptune blue planet icon"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCNEz25Ol5rAGgaRFRsQifZ7Zqvf6uXI9ERO5sJfWZfEzBcfbE1XYKhLdvl6n63CmJtvL1aozuBriLhxjry2V4dkSTjT8aGYrNNw9GNsdneYuUffddRxjEzRvAyFrFUDljSMQGS4EvR6WFRBYoJHre7Ln5pnQQVu7eV0T6dn5dWV6aO4OJhnqiLU8ugLLkBh4w20NybGB_LcsRfHPubsHz6v3t-lweiYb9hVkVYCsEPqbkA0-izApqYLuOmihi28U7wwZlw021sNvY" />
+                        </div>
+                        <div class="w-12 h-1.5 bg-black/40 blur-md mt-4 rounded-full"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-col items-center gap-6">
+                <a href="/dashboard"
+                    class="glass-btn px-12 py-4 rounded-lg text-lg font-bold tracking-widest uppercase text-white hover:text-white">
+                    Explore Universe
+                </a>
+                <div class="flex items-center gap-12 text-slate-500 text-xs tracking-[0.2em] uppercase font-bold">
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-primary/40"></span>
+                        8 Planets
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-primary/40"></span>
+                        5k+ Exoplanets
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-primary/40"></span>
+                        Real-time Data
+                    </div>
+                </div>
+            </div>
+        </main>
+        <footer class="relative z-10 border-t border-white/5 py-8 mt-12">
+            <div
+                class="max-w-7xl mx-auto px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-slate-600 text-sm">
+                <p>© 2024 CosmoQuery. Data provided by NASA JPL API.</p>
+                <div class="flex gap-6">
+                    <a class="hover:text-primary transition-colors" href="#">Documentation</a>
+                    <a class="hover:text-primary transition-colors" href="#">Changelog</a>
+                    <a class="hover:text-primary transition-colors" href="#">Privacy</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+</body>
+
+</html>

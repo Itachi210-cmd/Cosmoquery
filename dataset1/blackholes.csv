@@ -1,0 +1,31 @@
+bh_name,bh_type,host_galaxy,distance_ly,mass_solar,discovery_method,observatory,year_confirmed
+Sagittarius A*,Supermassive,Milky Way,26000,4300000,Radio and X-ray,NASA Chandra,2002
+M87*,Supermassive,Virgo A,55000000,6500000000,Event Horizon Imaging,EHT,2019
+Cygnus X-1,Stellar,Milky Way,6070,21,X-ray Binary,NASA Chandra,1971
+V404 Cygni,Stellar,Milky Way,7800,9,X-ray Binary,NASA Swift,2015
+LMC X-1,Stellar,Large Magellanic Cloud,163000,11,X-ray Binary,NASA Chandra,1983
+LMC X-3,Stellar,Large Magellanic Cloud,158000,7,X-ray Binary,NASA Chandra,1977
+GRO J1655-40,Stellar,Milky Way,11000,6,X-ray Binary,NASA Chandra,1994
+A0620-00,Stellar,Milky Way,3300,6,X-ray Binary,NASA Chandra,1975
+XTE J1118+480,Stellar,Milky Way,6100,8,X-ray Binary,NASA Chandra,2000
+GRS 1915+105,Stellar,Milky Way,36000,12,X-ray Binary,NASA Chandra,1994
+MAXI J1820+070,Stellar,Milky Way,10000,8,X-ray Binary,NASA Swift,2018
+Swift J1357.2-0933,Stellar,Milky Way,8000,4,X-ray Binary,NASA Swift,2011
+GW150914,Stellar,Unknown,1300000000,62,Gravitational Waves,LIGO,2015
+GW151226,Stellar,Unknown,1400000000,22,Gravitational Waves,LIGO,2015
+GW170104,Stellar,Unknown,3000000000,50,Gravitational Waves,LIGO,2017
+GW170608,Stellar,Unknown,1000000000,19,Gravitational Waves,LIGO,2017
+GW170814,Stellar,Unknown,1800000000,55,Gravitational Waves,LIGO,2017
+GW190521,Stellar,Unknown,17000000000,150,Gravitational Waves,LIGO,2020
+NGC 1277 BH,Supermassive,NGC 1277,220000000,17000000000,Stellar Dynamics,Hubble Space Telescope,2012
+IC 1101 BH,Supermassive,IC 1101,1040000000,40000000000,Galaxy Core Analysis,Hubble Space Telescope,2011
+TON 618,Supermassive,Quasar TON 618,10400000000,66000000000,Quasar Spectroscopy,Hubble Space Telescope,2003
+NGC 4889 BH,Supermassive,NGC 4889,321000000,21000000000,Stellar Dynamics,Hubble Space Telescope,2011
+Holmberg 15A BH,Supermassive,Holmberg 15A,700000000,40000000000,Galaxy Core Analysis,Hubble Space Telescope,2011
+NGC 1600 BH,Supermassive,NGC 1600,200000000,17000000000,Stellar Dynamics,Hubble Space Telescope,2016
+Messier 87 Jet BH,Supermassive,Virgo A,55000000,6500000000,Radio Jet Imaging,EHT,2019
+Centaurus A BH,Supermassive,Centaurus A,13000000,55000000,Radio and X-ray,NASA Chandra,2007
+NGC 4395 BH,Supermassive,NGC 4395,14000000,360000,Optical Spectroscopy,Hubble Space Telescope,2005
+ESO 243-49 HLX-1,Intermediate,ESO 243-49,290000000,20000,X-ray Emission,NASA Chandra,2009
+M82 X-1,Intermediate,M82,12000000,400,X-ray Timing,NASA Chandra,2014
+NGC 1313 X-1,Intermediate,NGC 1313,14000000,1000,X-ray Emission,NASA Chandra,2013
